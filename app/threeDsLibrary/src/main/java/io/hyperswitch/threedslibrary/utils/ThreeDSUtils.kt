@@ -1,5 +1,6 @@
 package io.hyperswitch.threedslibrary.utils
 
+import android.util.Log
 import `in`.juspay.trident.data.AuthenticationRequestParameters
 import `in`.juspay.trident.data.ChallengeParameters
 import io.hyperswitch.threedslibrary.data.AuthenticationData
@@ -39,11 +40,12 @@ object ThreeDSUtils {
             put("sdk_information", sdkInformation)
         }
 
-        return body.toString() // Converts JSONObject to String (like JSON.stringify in JS)
+        return body.toString()
     }
 
     suspend fun hsAReq(
         clientSecret: String,
+        publishableKey: String,
         aReq: AuthenticationRequestParameters
     ): ChallengeParameters? = withContext(Dispatchers.IO) {
         val paymentId = clientSecret.substringBefore("_secret_")
@@ -51,26 +53,24 @@ object ThreeDSUtils {
         val authenticationUrl = authenticationData!!.authenticationUrl
 
         try {
-            // Create JSON Body
             val jsonBody = createAuthCallBody(clientSecret, aReq)
 
-            // Create Request Body
             val requestBody =
                 jsonBody.toString().toRequestBody("application/json".toMediaType())
 
+            Log.i("AuthenticationURL", authenticationUrl)
+
             val client = OkHttpClient()
-            // Build the Request
             val request = Request.Builder()
                 .url(authenticationUrl)
                 .post(requestBody)
                 .addHeader(
                     "api-key",
-                    "pk_snd_23ff7c6d50e5424ba2e88415772380cd"
+                    publishableKey
                 )
                 .addHeader("Content-Type", "application/json")
                 .build()
 
-            // Execute the Request (blocking call, but it's on IO thread)
             val response: Response = client.newCall(request).execute()
 
             if (response.isSuccessful) {
@@ -84,7 +84,9 @@ object ThreeDSUtils {
 
                     println("Response: $transStatus")
 
-                    // Build and return ChallengeParameters from the response
+                    authenticationData!!.transStatus = transStatus
+
+
                     return@withContext ChallengeParameters(
                         threeDSServerTransactionID = threeDSServerTransId,
                         acsTransactionID = acsTransactionId,
@@ -124,7 +126,8 @@ object ThreeDSUtils {
                     messageVersion,
                     directoryServerID,
                     authenticationUrl,
-                    authorizeUrl
+                    authorizeUrl,
+                    null
                 )
             return authenticationData
 
@@ -135,8 +138,8 @@ object ThreeDSUtils {
         return null
     }
 
-    fun retrievePayment(clientSecret: String): String? {
-        return runBlocking { // Blocks execution until complete
+    fun retrievePayment(clientSecret: String,publishableKey: String): String? {
+        return runBlocking {
             val paymentId = clientSecret?.substringBefore("_secret_")
             val baseUrl =
                 "https://app.hyperswitch.io/api/payments/${paymentId}?client_secret=${clientSecret}&force_sync=true"
@@ -147,8 +150,8 @@ object ThreeDSUtils {
                         .get()
                         .addHeader(
                             "api-key",
-                            "pk_snd_23ff7c6d50e5424ba2e88415772380cd"
-                        ) // API Key in Header
+                            publishableKey
+                        )
                         .addHeader("Content-Type", "application/json")
                         .build()
 
@@ -161,7 +164,7 @@ object ThreeDSUtils {
 
 
                             println("Retrieve Confirm=====: ${jsonResponse.toString()}")
-                            return@withContext responseData // Return clientSecret after request
+                            return@withContext responseData
                         }
                     } else {
                         println("Error: ${response.code}")
@@ -169,14 +172,14 @@ object ThreeDSUtils {
                 } catch (e: IOException) {
                     e.printStackTrace()
                 }
-                null // Return null if there's an error
+                null
             }
         }
     }
 
 
-    fun getAuthenticationData(clientSecret: String) {
-        val responseData = retrievePayment(clientSecret)
+    fun getAuthenticationData(publishableKey: String,clientSecret: String) {
+        val responseData = retrievePayment(clientSecret,publishableKey)
         authenticationData = extract3DSData(responseData)
     }
 

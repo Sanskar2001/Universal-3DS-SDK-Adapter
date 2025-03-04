@@ -4,5 +4,6 @@ data class AuthenticationData(
     val messageVersion: String,
     val directoryServerId: String,
     val authenticationUrl: String,
-    val authorizeUrl:String
+    val authorizeUrl:String,
+    var transStatus:String?
 )

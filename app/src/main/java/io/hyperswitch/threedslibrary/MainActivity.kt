@@ -97,8 +97,9 @@ class MainActivity : AppCompatActivity() {
 
         btn.setOnClickListener {
             createPayment()
-            AuthenticationServiceProvider.initialize<TridentSDK>(AuthenticationServiceType.TRIDENT, clientSecret)
+            AuthenticationServiceProvider.initialize<TridentSDK>(AuthenticationServiceType.TRIDENT, clientSecret,"pk_snd_23ff7c6d50e5424ba2e88415772380cd")
             val trident = AuthenticationServiceProvider.getService<TridentSDK>()
+            trident.setClientSecret(clientSecret)
             trident.initialise(
                 applicationContext, ConfigParameters(), "en-US",
                 null

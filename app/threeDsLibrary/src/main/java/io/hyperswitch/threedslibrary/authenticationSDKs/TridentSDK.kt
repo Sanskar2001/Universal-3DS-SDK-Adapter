@@ -16,6 +16,7 @@ import `in`.juspay.trident.data.ChallengeParameters
 import `in`.juspay.trident.data.ChallengeStatusReceiver
 import io.hyperswitch.threedslibrary.service.AuthenticationService
 import io.hyperswitch.threedslibrary.utils.ThreeDSUtils
+import io.hyperswitch.threedslibrary.utils.ThreeDSUtils.authenticationData
 import io.hyperswitch.threedslibrary.utils.ThreeDSUtils.getAuthenticationData
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
@@ -43,7 +44,7 @@ val sdkHelper = object : SdkHelper {
     }
 }
 
-class TridentSDK(private val clientSecret: String) :
+class TridentSDK(private var clientSecret: String,private val publishableKey:String) :
     AuthenticationService<ConfigParameters, UiCustomization, Transaction, AuthenticationRequestParameters, ChallengeParameters, ChallengeStatusReceiver> {
     private lateinit var threeDS2Service: ThreeDS2Service
     private var cardNetwork: String = "MASTERCARD"
@@ -62,9 +63,13 @@ class TridentSDK(private val clientSecret: String) :
             locale,
             uiCustomization
         )
-        getAuthenticationData(clientSecret)
+        getAuthenticationData(publishableKey,clientSecret)
     }
 
+    fun setClientSecret(clientSecret: String)
+    {
+        this.clientSecret=clientSecret
+    }
     fun getMessageVersion(): String {
         return ThreeDSUtils.authenticationData!!.messageVersion
     }
@@ -104,7 +109,7 @@ class TridentSDK(private val clientSecret: String) :
 
     override fun getChallengeParameters(aReq: AuthenticationRequestParameters): ChallengeParameters {
         return runBlocking {
-            ThreeDSUtils.hsAReq(clientSecret, aReq)
+            ThreeDSUtils.hsAReq(clientSecret,publishableKey, aReq)
                 ?: throw IllegalStateException("hsAReq returned null")
         }
     }
