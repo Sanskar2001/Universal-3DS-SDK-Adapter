@@ -14,9 +14,8 @@ import `in`.juspay.trident.customization.UiCustomization
 import `in`.juspay.trident.data.AuthenticationRequestParameters
 import `in`.juspay.trident.data.ChallengeParameters
 import `in`.juspay.trident.data.ChallengeStatusReceiver
-import io.hyperswitch.threedslibrary.service.AuthenticationService
+import io.hyperswitch.threedslibrary.service.ThreeDSAdapter
 import io.hyperswitch.threedslibrary.utils.ThreeDSUtils
-import io.hyperswitch.threedslibrary.utils.ThreeDSUtils.authenticationData
 import io.hyperswitch.threedslibrary.utils.ThreeDSUtils.getAuthenticationData
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
@@ -45,7 +44,7 @@ val sdkHelper = object : SdkHelper {
 }
 
 class TridentSDK(private var clientSecret: String,private val publishableKey:String) :
-    AuthenticationService<ConfigParameters, UiCustomization, Transaction, AuthenticationRequestParameters, ChallengeParameters, ChallengeStatusReceiver> {
+    ThreeDSAdapter<ConfigParameters, UiCustomization, Transaction, AuthenticationRequestParameters, ChallengeParameters, ChallengeStatusReceiver> {
     private lateinit var threeDS2Service: ThreeDS2Service
     private var cardNetwork: String = "MASTERCARD"
     private lateinit var aReq: AuthenticationRequestParameters
@@ -139,7 +138,7 @@ class TridentSDK(private var clientSecret: String,private val publishableKey:Str
      * @param activity The activity from which authentication is triggered.
      * @param challengeStatusReceiver The receiver to handle challenge responses.
      */
-    override fun doAuthentication(
+    override fun startAuthentication(
         applicationContext: Application,
         activity: Activity,
         challengeStatusReceiver: ChallengeStatusReceiver

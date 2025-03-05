@@ -8,9 +8,9 @@ import `in`.juspay.trident.data.ChallengeStatusReceiver
 import `in`.juspay.trident.data.CompletionEvent
 import `in`.juspay.trident.data.ProtocolErrorEvent
 import `in`.juspay.trident.data.RuntimeErrorEvent
-import io.hyperswitch.threedslibrary.service.AuthenticationServiceType
-import io.hyperswitch.threedslibrary.di.AuthenticationServiceProvider
+import io.hyperswitch.threedslibrary.di.ThreeDSFactory
 import io.hyperswitch.threedslibrary.authenticationSDKs.TridentSDK
+import io.hyperswitch.threedslibrary.di.ThreeDSSDKType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -97,15 +97,15 @@ class MainActivity : AppCompatActivity() {
 
         btn.setOnClickListener {
             createPayment()
-            AuthenticationServiceProvider.initialize<TridentSDK>(AuthenticationServiceType.TRIDENT, clientSecret,"pk_snd_23ff7c6d50e5424ba2e88415772380cd")
-            val trident = AuthenticationServiceProvider.getService<TridentSDK>()
+            ThreeDSFactory.initialize<TridentSDK>(ThreeDSSDKType.TRIDENT, clientSecret,"pk_snd_23ff7c6d50e5424ba2e88415772380cd")
+            val trident = ThreeDSFactory.getService<TridentSDK>()
             trident.setClientSecret(clientSecret)
             trident.initialise(
                 applicationContext, ConfigParameters(), "en-US",
                 null
             )
 
-            trident.doAuthentication(application, this, challengeStatusReceiver)
+            trident.startAuthentication(application, this, challengeStatusReceiver)
             /* FOR A GRANULAR CONTROL individual function can be called
             val dsId = trident.getMessageVersion()
             val messageVersion = trident.getDirectoryServerID()

@@ -4,7 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 
-interface AuthenticationService<
+interface ThreeDSAdapter<
         ConfigParameters,
         UiCustomization,
         Transaction,
@@ -37,7 +37,7 @@ interface AuthenticationService<
     fun getChallengeParameters(aReq: AuthenticationRequestParameters): ChallengeParameters
 
 
-    fun doAuthentication(
+    fun startAuthentication(
         applicationContext: Application,
         activity: Activity,
         challengeStatusReceiver: ChallengeStatusReceiver
