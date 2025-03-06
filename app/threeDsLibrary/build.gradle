@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    id 'maven-publish' // Required for publishing
 }
 
 android {
@@ -8,7 +9,7 @@ android {
     compileSdk 35
 
     defaultConfig {
-        minSdk 29
+        minSdk 23
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -29,6 +30,18 @@ android {
     }
 }
 
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = 'io.hyperswitch'
+                artifactId = 'universalThreeDS'
+                version = '1.0.0'
+            }
+        }
+    }
+}
 dependencies {
 //    implementation(libs.hypersmshandler)
     implementation("com.squareup.okhttp3:okhttp:4.9.3")

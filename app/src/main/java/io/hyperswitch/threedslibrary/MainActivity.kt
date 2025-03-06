@@ -97,15 +97,25 @@ class MainActivity : AppCompatActivity() {
 
         btn.setOnClickListener {
             createPayment()
-            ThreeDSFactory.initialize<TridentSDK>(ThreeDSSDKType.TRIDENT, clientSecret,"pk_snd_23ff7c6d50e5424ba2e88415772380cd")
-            val trident = ThreeDSFactory.getService<TridentSDK>()
-            trident.setClientSecret(clientSecret)
-            trident.initialise(
-                applicationContext, ConfigParameters(), "en-US",
-                null
-            )
+            try {
+                ThreeDSFactory.initialize<TridentSDK>(
+                    ThreeDSSDKType.TRIDENT,
+                    clientSecret,
+                    "pk_snd_23ff7c6d50e5424ba2e88415772380cd"
+                )
+                val trident = ThreeDSFactory.getService<TridentSDK>()
+                trident.setClientSecret(clientSecret)
+                trident.initialise(
+                    applicationContext, ConfigParameters(), "en-US",
+                    null
+                )
 
-            trident.startAuthentication(application, this, challengeStatusReceiver)
+                trident.startAuthentication(application, this, challengeStatusReceiver)
+            }
+            catch (exception:Exception)
+            {
+                println(exception.message)
+            }
             /* FOR A GRANULAR CONTROL individual function can be called
             val dsId = trident.getMessageVersion()
             val messageVersion = trident.getDirectoryServerID()

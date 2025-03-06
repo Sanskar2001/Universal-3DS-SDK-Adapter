@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import `in`.juspay.trident.core.ChallengeResponseParameters
 import `in`.juspay.trident.core.ConfigParameters
 import `in`.juspay.trident.core.FileHelper
 import `in`.juspay.trident.core.Logger
@@ -14,6 +15,7 @@ import `in`.juspay.trident.customization.UiCustomization
 import `in`.juspay.trident.data.AuthenticationRequestParameters
 import `in`.juspay.trident.data.ChallengeParameters
 import `in`.juspay.trident.data.ChallengeStatusReceiver
+import `in`.juspay.trident.exception.SDKNotInitializedException
 import io.hyperswitch.threedslibrary.service.ThreeDSAdapter
 import io.hyperswitch.threedslibrary.utils.ThreeDSUtils
 import io.hyperswitch.threedslibrary.utils.ThreeDSUtils.getAuthenticationData
@@ -43,7 +45,7 @@ val sdkHelper = object : SdkHelper {
     }
 }
 
-class TridentSDK(private var clientSecret: String,private val publishableKey:String) :
+class TridentSDK(private var clientSecret: String, private val publishableKey: String) :
     ThreeDSAdapter<ConfigParameters, UiCustomization, Transaction, AuthenticationRequestParameters, ChallengeParameters, ChallengeStatusReceiver> {
     private lateinit var threeDS2Service: ThreeDS2Service
     private var cardNetwork: String = "MASTERCARD"
@@ -62,13 +64,13 @@ class TridentSDK(private var clientSecret: String,private val publishableKey:Str
             locale,
             uiCustomization
         )
-        getAuthenticationData(publishableKey,clientSecret)
+        getAuthenticationData(publishableKey, clientSecret)
     }
 
-    fun setClientSecret(clientSecret: String)
-    {
-        this.clientSecret=clientSecret
+    fun setClientSecret(clientSecret: String) {
+        this.clientSecret = clientSecret
     }
+
     fun getMessageVersion(): String {
         return ThreeDSUtils.authenticationData!!.messageVersion
     }
@@ -108,7 +110,7 @@ class TridentSDK(private var clientSecret: String,private val publishableKey:Str
 
     override fun getChallengeParameters(aReq: AuthenticationRequestParameters): ChallengeParameters {
         return runBlocking {
-            ThreeDSUtils.hsAReq(clientSecret,publishableKey, aReq)
+            ThreeDSUtils.hsAReq(clientSecret, publishableKey, aReq)
                 ?: throw IllegalStateException("hsAReq returned null")
         }
     }
@@ -130,14 +132,6 @@ class TridentSDK(private var clientSecret: String,private val publishableKey:Str
     }
 
 
-    /**
-     * A helper wrapper function to simplify the authentication process.
-     * This method automates the challenge flow using 3DS authentication.
-     *
-     * @param applicationContext The application context.
-     * @param activity The activity from which authentication is triggered.
-     * @param challengeStatusReceiver The receiver to handle challenge responses.
-     */
     override fun startAuthentication(
         applicationContext: Application,
         activity: Activity,

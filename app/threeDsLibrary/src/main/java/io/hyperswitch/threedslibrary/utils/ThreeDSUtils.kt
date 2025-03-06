@@ -58,7 +58,6 @@ object ThreeDSUtils {
             val requestBody =
                 jsonBody.toString().toRequestBody("application/json".toMediaType())
 
-            Log.i("AuthenticationURL", authenticationUrl)
 
             val client = OkHttpClient()
             val request = Request.Builder()
@@ -81,8 +80,6 @@ object ThreeDSUtils {
                     val acsRefNumber = json.optString("acs_reference_number", "")
                     val acsTransactionId = json.optString("acs_trans_id", "")
                     val threeDSServerTransId = json.optString("three_dsserver_trans_id", "")
-
-                    println("Response: $transStatus")
 
                     authenticationData!!.transStatus = transStatus
 
@@ -115,11 +112,6 @@ object ThreeDSUtils {
             val authorizeUrl = threeDSData?.optString("three_ds_authorize_url", "") ?: ""
             val messageVersion = threeDSData?.optString("message_version", "") ?: ""
             val directoryServerID = threeDSData?.optString("directory_server_id", "") ?: ""
-
-            println("3DS Authentication URL: $authenticationUrl")
-            println("3DS Authorize URL: $authorizeUrl")
-            println("Message Version: $messageVersion")
-            println("Directory Server ID: $directoryServerID")
 
             val authenticationData =
                 AuthenticationData(
@@ -161,9 +153,6 @@ object ThreeDSUtils {
                     if (response.isSuccessful) {
                         response.body?.string()?.let { responseData ->
                             val jsonResponse = JSONObject(responseData)
-
-
-                            println("Retrieve Confirm=====: ${jsonResponse.toString()}")
                             return@withContext responseData
                         }
                     } else {
