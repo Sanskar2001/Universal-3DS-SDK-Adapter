@@ -45,12 +45,27 @@ val sdkHelper = object : SdkHelper {
     }
 }
 
-class TridentSDK(private var clientSecret: String, private val publishableKey: String) :
+class TridentSDK :
     ThreeDSAdapter<ConfigParameters, UiCustomization, Transaction, AuthenticationRequestParameters, ChallengeParameters, ChallengeStatusReceiver> {
     private lateinit var threeDS2Service: ThreeDS2Service
     private var cardNetwork: String = "MASTERCARD"
     private lateinit var aReq: AuthenticationRequestParameters
     private lateinit var transaction: Transaction
+    private var clientSecret: String? = null
+    private var publishableKey: String? = null
+    private var authenticateResponseJson: String? = null
+
+    constructor(
+        clientSecret: String?=null,
+        publishableKey: String,
+        authenticateResponseJson: String? = null
+    ) {
+        this.clientSecret = clientSecret
+        this.publishableKey = publishableKey
+        this.authenticateResponseJson = authenticateResponseJson
+    }
+
+
     override fun initialise(
         context: Context,
         configParameters: ConfigParameters,
@@ -64,7 +79,14 @@ class TridentSDK(private var clientSecret: String, private val publishableKey: S
             locale,
             uiCustomization
         )
-        getAuthenticationData(publishableKey, clientSecret)
+        if (authenticateResponseJson != null) {
+            println("1 st")
+            getAuthenticationData(authenticateResponseJson)
+        }
+        else {
+            println("2 nd")
+            getAuthenticationData(publishableKey!!, clientSecret!!)
+        }
     }
 
     fun setClientSecret(clientSecret: String) {

@@ -5,5 +5,6 @@ data class AuthenticationData(
     val directoryServerId: String,
     val authenticationUrl: String,
     val authorizeUrl:String,
-    var transStatus:String?
+    var transStatus:String?,
+    val paymentId:String
 )

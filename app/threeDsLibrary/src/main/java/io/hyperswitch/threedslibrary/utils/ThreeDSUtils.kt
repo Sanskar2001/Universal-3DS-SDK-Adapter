@@ -4,6 +4,7 @@ import android.util.Log
 import `in`.juspay.trident.data.AuthenticationRequestParameters
 import `in`.juspay.trident.data.ChallengeParameters
 import io.hyperswitch.threedslibrary.data.AuthenticationData
+import io.hyperswitch.threedslibrary.data.Constants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -23,7 +24,7 @@ object ThreeDSUtils {
         aReq: AuthenticationRequestParameters
     ): String {
         val body = JSONObject().apply {
-            put("client_secret", clientSecret)
+//            put("client_secret", clientSecret)
             put("device_channel", "APP")
             put("threeds_method_comp_ind", "N")
 
@@ -44,16 +45,19 @@ object ThreeDSUtils {
     }
 
     suspend fun hsAReq(
-        clientSecret: String,
-        publishableKey: String,
+        clientSecret: String?,
+        publishableKey: String?,
         aReq: AuthenticationRequestParameters
     ): ChallengeParameters? = withContext(Dispatchers.IO) {
-        val paymentId = clientSecret.substringBefore("_secret_")
 
-        val authenticationUrl = authenticationData!!.authenticationUrl
+        println("function called------")
+        val paymentId = authenticationData!!.paymentId
+
+        val authenticationUrl =
+           Constants.getAuthenticateURL(paymentId)
 
         try {
-            val jsonBody = createAuthCallBody(clientSecret, aReq)
+            val jsonBody = clientSecret?.let { createAuthCallBody(it, aReq) }
 
             val requestBody =
                 jsonBody.toString().toRequestBody("application/json".toMediaType())
@@ -65,7 +69,7 @@ object ThreeDSUtils {
                 .post(requestBody)
                 .addHeader(
                     "api-key",
-                    publishableKey
+                   "pk_snd_eccadfa3a89d4fa0a7a331f20b1dea23"
                 )
                 .addHeader("Content-Type", "application/json")
                 .build()
@@ -112,6 +116,7 @@ object ThreeDSUtils {
             val authorizeUrl = threeDSData?.optString("three_ds_authorize_url", "") ?: ""
             val messageVersion = threeDSData?.optString("message_version", "") ?: ""
             val directoryServerID = threeDSData?.optString("directory_server_id", "") ?: ""
+            val paymentId = json.optString("payment_id", "")
 
             val authenticationData =
                 AuthenticationData(
@@ -119,7 +124,8 @@ object ThreeDSUtils {
                     directoryServerID,
                     authenticationUrl,
                     authorizeUrl,
-                    null
+                    null,
+                    paymentId
                 )
             return authenticationData
 
@@ -130,11 +136,11 @@ object ThreeDSUtils {
         return null
     }
 
-    fun retrievePayment(clientSecret: String,publishableKey: String): String? {
+    fun retrievePayment(clientSecret: String, publishableKey: String): String? {
         return runBlocking {
-            val paymentId = clientSecret?.substringBefore("_secret_")
+            val paymentId = clientSecret.substringBefore("_secret_")
             val baseUrl =
-                "https://app.hyperswitch.io/api/payments/${paymentId}?client_secret=${clientSecret}&force_sync=true"
+              Constants.getRetriveURL(paymentId,clientSecret)
             withContext(Dispatchers.IO) {
                 try {
                     val request = Request.Builder()
@@ -142,7 +148,7 @@ object ThreeDSUtils {
                         .get()
                         .addHeader(
                             "api-key",
-                            publishableKey
+                            publishableKey!!
                         )
                         .addHeader("Content-Type", "application/json")
                         .build()
@@ -167,9 +173,16 @@ object ThreeDSUtils {
     }
 
 
-    fun getAuthenticationData(publishableKey: String,clientSecret: String) {
-        val responseData = retrievePayment(clientSecret,publishableKey)
+    fun getAuthenticationData(publishableKey: String, clientSecret: String) {
+        println("with publishable key and client secret")
+        val responseData = retrievePayment(clientSecret, publishableKey)
         authenticationData = extract3DSData(responseData)
+    }
+
+    fun getAuthenticationData(authenticateResponseJson: String?) {
+        println("with authenticate called....."+authenticateResponseJson)
+
+        authenticationData = extract3DSData(authenticateResponseJson)
     }
 
 

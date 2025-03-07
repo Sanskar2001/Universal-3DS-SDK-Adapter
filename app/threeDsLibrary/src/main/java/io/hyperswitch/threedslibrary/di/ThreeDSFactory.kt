@@ -16,13 +16,24 @@ object ThreeDSFactory {
 
     var authenticationService: ThreeDSAdapter<*, *, *, *, *, *>? = null
 
+    fun <T> createServiceWithAuthResponse(
+        type: ThreeDSSDKType,
+        authenticateResponseJson:String?,
+        publishableKey: String
+    ): T {
+        return when (type) {
+            ThreeDSSDKType.TRIDENT -> TridentSDK(authenticateResponseJson =  authenticateResponseJson, publishableKey = publishableKey) as T
+            ThreeDSSDKType.NETCETERA -> throw UnsupportedOperationException("Netcetera SDK not implemented yet")
+        }
+    }
+
     fun <T> createService(
         type: ThreeDSSDKType,
         clientSecret: String,
         publishableKey: String
     ): T {
         return when (type) {
-            ThreeDSSDKType.TRIDENT -> TridentSDK(clientSecret, publishableKey) as T
+            ThreeDSSDKType.TRIDENT -> TridentSDK(clientSecret=clientSecret, publishableKey=publishableKey) as T
             ThreeDSSDKType.NETCETERA -> throw UnsupportedOperationException("Netcetera SDK not implemented yet")
         }
     }
@@ -35,6 +46,18 @@ object ThreeDSFactory {
         if (authenticationService == null) {
             authenticationService =
                 createService<T>(type, clientSecret, publishableKey)
+        }
+
+    }
+
+    inline fun <reified T : ThreeDSAdapter<*, *, *, *, *, *>> initializeWithAuthResponse(
+        type: ThreeDSSDKType,
+        authenticateResponseJson:String?,
+        publishableKey: String
+    ) {
+        if (authenticationService == null) {
+            authenticationService =
+                createServiceWithAuthResponse<T>(type, authenticateResponseJson,publishableKey)
         }
 
     }
