@@ -15,9 +15,14 @@ import `in`.juspay.trident.customization.UiCustomization
 import `in`.juspay.trident.data.AuthenticationRequestParameters
 import `in`.juspay.trident.data.ChallengeParameters
 import `in`.juspay.trident.data.ChallengeStatusReceiver
+import `in`.juspay.trident.data.CompletionEvent
+import `in`.juspay.trident.data.ProtocolErrorEvent
+import `in`.juspay.trident.data.RuntimeErrorEvent
 import `in`.juspay.trident.exception.SDKNotInitializedException
+import io.hyperswitch.threedslibrary.service.AuthResult
 import io.hyperswitch.threedslibrary.service.ThreeDSAdapter
 import io.hyperswitch.threedslibrary.utils.ThreeDSUtils
+import io.hyperswitch.threedslibrary.utils.ThreeDSUtils.authenticationData
 import io.hyperswitch.threedslibrary.utils.ThreeDSUtils.getAuthenticationData
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
@@ -56,7 +61,7 @@ class TridentSDK :
     private var authenticateResponseJson: String? = null
 
     constructor(
-        clientSecret: String?=null,
+        clientSecret: String? = null,
         publishableKey: String,
         authenticateResponseJson: String? = null
     ) {
@@ -80,11 +85,8 @@ class TridentSDK :
             uiCustomization
         )
         if (authenticateResponseJson != null) {
-            println("1 st")
             getAuthenticationData(authenticateResponseJson)
-        }
-        else {
-            println("2 nd")
+        } else {
             getAuthenticationData(publishableKey!!, clientSecret!!)
         }
     }
@@ -157,19 +159,51 @@ class TridentSDK :
     override fun startAuthentication(
         applicationContext: Application,
         activity: Activity,
-        challengeStatusReceiver: ChallengeStatusReceiver
+        completionCallback: (AuthResult) -> Unit
     ) {
-        val dsId = getMessageVersion()
-        val messageVersion = getDirectoryServerID()
-        createTransaction(dsId, messageVersion)
-        val aReq = getAuthenticationRequestParameters()
+        try {
+            val dsId = getMessageVersion()
+            val messageVersion = getDirectoryServerID()
+            createTransaction(dsId, messageVersion)
+            val aReq = getAuthenticationRequestParameters()
+            val challengeParameters = getChallengeParameters(aReq)
 
-        val challengeParameters = getChallengeParameters(aReq)
-        doChallenge(activity, challengeParameters, challengeStatusReceiver, 5, "")
+            val challengeStatusReceiver = object : ChallengeStatusReceiver {
+                override fun completed(completionEvent: CompletionEvent) {
 
+                    completionCallback(AuthResult.Success("Authentication successful! ${completionEvent.transactionStatus}"))
+                }
+
+                override fun cancelled() {
+
+                    completionCallback(AuthResult.Failure("Authentication was cancelled."))
+                }
+
+                override fun timedout() {
+
+                    completionCallback(AuthResult.Failure("Authentication timed out."))
+                }
+
+                override fun protocolError(protocolErrorEvent: ProtocolErrorEvent) {
+
+                    completionCallback(AuthResult.Failure("Protocol error occurred during authentication. ${protocolErrorEvent.errorMessage}"))
+                }
+
+                override fun runtimeError(runtimeErrorEvent: RuntimeErrorEvent) {
+                   
+                    completionCallback(AuthResult.Failure("Runtime error occurred during authentication. ${runtimeErrorEvent.errorMessage}"))
+                }
+            }
+
+            if (authenticationData?.transStatus == "C") {
+                doChallenge(activity, challengeParameters, challengeStatusReceiver, 5, "")
+            } else {
+                completionCallback(AuthResult.Success("Authentication completed successfully without challenge!"))
+            }
+        } catch (e: Exception) {
+            completionCallback(AuthResult.Failure("Authentication failed: ${e.message}"))
+        }
     }
-
-
 }
 
 

@@ -8,6 +8,11 @@ import `in`.juspay.trident.exception.SDKAlreadyInitializedException
 import `in`.juspay.trident.exception.SDKNotInitializedException
 import `in`.juspay.trident.exception.SDKRuntimeException
 
+sealed class AuthResult {
+    data class Success( val message: String) : AuthResult()
+    data class Failure(val errorMessage: String) : AuthResult()
+}
+
 /**
  * Interface defining the core functionalities required for integrating 3D Secure authentication.
  *
@@ -131,6 +136,6 @@ interface ThreeDSAdapter<
     fun startAuthentication(
         applicationContext: Application,
         activity: Activity,
-        challengeStatusReceiver: ChallengeStatusReceiver
+        completionCallback: (AuthResult) -> Unit
     )
 }

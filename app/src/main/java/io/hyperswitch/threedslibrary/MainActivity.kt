@@ -11,6 +11,7 @@ import `in`.juspay.trident.data.RuntimeErrorEvent
 import io.hyperswitch.threedslibrary.di.ThreeDSFactory
 import io.hyperswitch.threedslibrary.authenticationSDKs.TridentSDK
 import io.hyperswitch.threedslibrary.di.ThreeDSSDKType
+import io.hyperswitch.threedslibrary.service.AuthResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -188,7 +189,7 @@ class MainActivity : AppCompatActivity() {
 
         btn.setOnClickListener {
             authenticate()
-            createPayment()
+//            createPayment()
             try {
 //                ThreeDSFactory.initialize<TridentSDK>(
 //                    ThreeDSSDKType.TRIDENT,
@@ -196,9 +197,9 @@ class MainActivity : AppCompatActivity() {
 //                    "pk_snd_23ff7c6d50e5424ba2e88415772380cd"
 //                )
                 ThreeDSFactory.initializeWithAuthResponse<TridentSDK>(
-                   type= ThreeDSSDKType.TRIDENT,
-                   authenticateResponseJson= authenticateResponseJson,
-                   publishableKey =  "pk_snd_eccadfa3a89d4fa0a7a331f20b1dea23"
+                    type = ThreeDSSDKType.TRIDENT,
+                    authenticateResponseJson = authenticateResponseJson,
+                    publishableKey = "pk_snd_eccadfa3a89d4fa0a7a331f20b1dea23"
                 )
                 val trident = ThreeDSFactory.getService<TridentSDK>()
                 trident.setClientSecret(clientSecret)
@@ -207,9 +208,20 @@ class MainActivity : AppCompatActivity() {
                     null
                 )
 
-                trident.startAuthentication(application, this, challengeStatusReceiver)
+                trident.startAuthentication(application, this) { authResult ->
+                    when (authResult) {
+                        is AuthResult.Success -> {
+                            println("Success: ${authResult.message}")
+                        }
+
+                        is AuthResult.Failure -> {
+                            println("Failure: ${authResult.errorMessage}")
+                        }
+                    }
+                }
+
             } catch (exception: Exception) {
-                println(exception.message)
+                println("my error"+exception.message)
             }
             /* FOR A GRANULAR CONTROL individual function can be called
             val dsId = trident.getMessageVersion()
