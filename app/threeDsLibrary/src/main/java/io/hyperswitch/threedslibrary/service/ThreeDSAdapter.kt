@@ -8,9 +8,9 @@ import `in`.juspay.trident.exception.SDKAlreadyInitializedException
 import `in`.juspay.trident.exception.SDKNotInitializedException
 import `in`.juspay.trident.exception.SDKRuntimeException
 
-sealed class AuthResult {
-    data class Success( val message: String) : AuthResult()
-    data class Failure(val errorMessage: String) : AuthResult()
+sealed class Result {
+    data class Success(val message: String) : Result()
+    data class Failure(val errorMessage: String) : Result()
 }
 
 /**
@@ -51,9 +51,9 @@ interface ThreeDSAdapter<
     )
     fun initialise(
         context: Context,
-        configParameters: ConfigParameters,
         locale: String?,
-        uiCustomization: UiCustomization?
+        uiCustomization: UiCustomization?,
+        initializationCallback: (Result) -> Unit
     )
 
     /**
@@ -103,7 +103,7 @@ interface ThreeDSAdapter<
     fun doChallenge(
         activity: Activity,
         challengeParameters: ChallengeParameters,
-        challengeStatusReceiver: ChallengeStatusReceiver,
+        challengeStatusReceiver: io.hyperswitch.threedslibrary.data.ChallengeStatusReceiver,
         timeOutInMinutes: Int,
         bankDetails: String?
     )
@@ -136,6 +136,6 @@ interface ThreeDSAdapter<
     fun startAuthentication(
         applicationContext: Application,
         activity: Activity,
-        completionCallback: (AuthResult) -> Unit
+        completionCallback: (Result) -> Unit
     )
 }

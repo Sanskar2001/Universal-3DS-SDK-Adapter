@@ -22,7 +22,7 @@ object ThreeDSFactory {
         publishableKey: String
     ): T {
         return when (type) {
-            ThreeDSSDKType.TRIDENT -> TridentSDK(authenticateResponseJson =  authenticateResponseJson, publishableKey = publishableKey) as T
+            ThreeDSSDKType.TRIDENT -> TridentSDK(clientSecret = null,authenticateResponseJson =  authenticateResponseJson, publishableKey = publishableKey) as T
             ThreeDSSDKType.NETCETERA -> throw UnsupportedOperationException("Netcetera SDK not implemented yet")
         }
     }

@@ -1,154 +1,140 @@
 package io.hyperswitch.threedslibrary
 
+import android.content.Context
+import android.graphics.Typeface
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import `in`.juspay.trident.core.ConfigParameters
-import `in`.juspay.trident.data.ChallengeStatusReceiver
-import `in`.juspay.trident.data.CompletionEvent
-import `in`.juspay.trident.data.ProtocolErrorEvent
-import `in`.juspay.trident.data.RuntimeErrorEvent
+import androidx.lifecycle.lifecycleScope
 import io.hyperswitch.threedslibrary.di.ThreeDSFactory
 import io.hyperswitch.threedslibrary.authenticationSDKs.TridentSDK
+import io.hyperswitch.threedslibrary.customization.ButtonCustomization
+import io.hyperswitch.threedslibrary.customization.CancelDialogCustomization
+import io.hyperswitch.threedslibrary.customization.FontCustomization
+import io.hyperswitch.threedslibrary.customization.FontStyle
+import io.hyperswitch.threedslibrary.customization.IFont
+import io.hyperswitch.threedslibrary.customization.LabelCustomization
+import io.hyperswitch.threedslibrary.customization.LoaderCustomization
+import io.hyperswitch.threedslibrary.customization.OTPSheetCustomization
+import io.hyperswitch.threedslibrary.customization.TextBoxCustomization
+import io.hyperswitch.threedslibrary.customization.TextCustomization
+import io.hyperswitch.threedslibrary.customization.ToolbarCustomization
+import io.hyperswitch.threedslibrary.customization.UiCustomization
+import io.hyperswitch.threedslibrary.data.ChallengeStatusReceiver
+import io.hyperswitch.threedslibrary.data.CompletionEvent
+import io.hyperswitch.threedslibrary.data.ProtocolErrorEvent
+import io.hyperswitch.threedslibrary.data.RuntimeErrorEvent
 import io.hyperswitch.threedslibrary.di.ThreeDSSDKType
-import io.hyperswitch.threedslibrary.service.AuthResult
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
-import okio.IOException
-import org.json.JSONObject
+import io.hyperswitch.threedslibrary.service.Result
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var clientSecret: String
-    private lateinit var authenticateResponseJson: String
+    private fun getUiCustomization(): UiCustomization {
+        val fontCustomization = FontCustomization(
+            regular = getFont(applicationContext, "fonts/BasisGrotesquePro-Regular.ttf"),
+            bold = getFont(applicationContext, "fonts/BasisGrotesquePro-Bold.ttf"),
+            semiBold = getFont(applicationContext, "fonts/BasisGrotesquePro-SemiBold.ttf")
+        )
 
-    private fun authenticate() {
+        val toolbarCustomization = ToolbarCustomization(
+            backgroundColor = "#FFEEE5",
+            headerText = "Secure Checkout",
+            textColor = "#2E2E2E",
+            textFontStyle = FontStyle.BOLD,
+            textFontSize = 16,
+            iconBackgroundColor = "#2E2E2E",
+            statusBarColor = "#333333"
+        )
 
-        return runBlocking {
-            val client = OkHttpClient()
+        val submitButtonCustomization = ButtonCustomization(
+            backgroundColor = "#F15700",
+            fontSize = 16,
+            cornerRadius = 12.0
+        )
 
-            val json = JSONObject().apply {
-                put("amount", 100)
-                put("currency", "PLN")
-                put("return_url", "https://google.com")
-                put("payment_method", "card")
-                put("payment_method_data", JSONObject().apply {
-                    put("card", JSONObject().apply {
-                        put("card_number", "5267648608924299")
-                        put("card_exp_month", "04")
-                        put("card_exp_year", "2029")
-                        put("card_holder_name", "John Smith")
-                        put("card_cvc", "238")
-                        put("card_network", "Visa")
-                    })
-                })
-                put("billing", JSONObject().apply {
-                    put("address", JSONObject().apply {
-                        put("line1", "1467")
-                        put("line2", "Harrison Street")
-                        put("line3", "Harrison Street")
-                        put("city", "San Fransico")
-                        put("state", "CA")
-                        put("zip", "94122")
-                        put("country", "US")
-                        put("first_name", "John")
-                        put("last_name", "Doe")
-                    })
-                    put("phone", JSONObject().apply {
-                        put("number", "8056594427")
-                        put("country_code", "+91")
-                    })
-                })
-                put("browser_info", JSONObject().apply {
-                    put(
-                        "user_agent",
-                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
-                    )
-                    put(
-                        "accept_header",
-                        "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8"
-                    )
-                    put("language", "nl-NL")
-                    put("color_depth", 24)
-                    put("screen_height", 723)
-                    put("screen_width", 1536)
-                    put("time_zone", 0)
-                    put("java_enabled", true)
-                    put("java_script_enabled", true)
-                    put("ip_address", "125.0.0.1")
-                })
-            }
+        val resendButtonCustomization = ButtonCustomization(
+            textColor = "#02060C",
+            backgroundColor = "#FFFFFF",
+            fontStyle = FontStyle.REGULAR
+        )
 
-            val requestBody =
-                RequestBody.create("application/json".toMediaTypeOrNull(), json.toString())
-            val request = Request.Builder()
-                .url("https://auth.app.hyperswitch.io/api/authenticate")
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Accept", "application/json")
-                .addHeader(
-                    "api-key",
-                    "snd_ehirpVANCGQDwG6fYvCC7dbCucH1ZtfzcxuhsOdHQgjYX46D1JpCYWki8TSU1SWg"
-                )
-                .post(requestBody)
-                .build()
+        val labelCustomization = LabelCustomization(
+            challengeHeader = TextCustomization(
+                color = "#02060C",
+                fontStyle = FontStyle.BOLD,
+                fontSize = 16
+            ),
+            challengeContent = TextCustomization(
+                color = "#02060C",
+                fontSize = 14
+            ),
+        )
 
-            client.newCall(request).enqueue(object : okhttp3.Callback {
-                override fun onFailure(call: okhttp3.Call, e: IOException) {
-                    e.printStackTrace()
-                }
+        val textBoxCustomization = TextBoxCustomization(
+            textColor = "#02060C",
+            borderColor = "#02060C",
+            focusedColor = "#F15700",
+            cornerRadius = 12.0
+        )
 
-                override fun onResponse(call: okhttp3.Call, response: Response) {
-                    response.use {
-                        if (!response.isSuccessful) throw IOException("Unexpected code $response")
-                        authenticateResponseJson = response.body?.string().toString()
-                        println(authenticateResponseJson)
-                    }
-                }
-            })
-        }
+        val otpSheetCustomization = OTPSheetCustomization(
+            submitButton = ButtonCustomization(
+                backgroundColor = "#F15700",
+                fontSize = 16,
+                cornerRadius = 12.0
+            ),
+            resendActiveText = TextCustomization(
+                color = "#F15700",
+                fontStyle = FontStyle.BOLD,
+                fontSize = 14
+            ),
+            headerText = TextCustomization(
+                fontSize = 24,
+                color = "#333333",
+                fontStyle = FontStyle.BOLD
+            ),
+            subText = TextCustomization(
+                fontSize = 13,
+                color = "#A1A1A1",
+                fontStyle = FontStyle.REGULAR
+            )
+        )
+        val cancelDialogCustomization = CancelDialogCustomization(
+            continueButtonCustomization = ButtonCustomization(
+                backgroundColor = "#F15700",
+                fontSize = 16,
+                cornerRadius = 12.0
+            ),
+            headerTextCustomization = TextCustomization(
+                color = "#02060C",
+                fontStyle = FontStyle.BOLD,
+                fontSize = 16
+            ),
+            contentTextCustomization = TextCustomization(
+                color = "#02060C",
+                fontSize = 14
+            )
+        )
+        val loaderCustomization = LoaderCustomization(
+            useProgressDialogInChallengeScreen = false
+        )
+
+        return UiCustomization(
+            fontCustomization = fontCustomization,
+            toolbarCustomization = toolbarCustomization,
+            submitButtonCustomization = submitButtonCustomization,
+            resendButtonCustomization = resendButtonCustomization,
+            labelCustomization = labelCustomization,
+            textBoxCustomization = textBoxCustomization,
+            otpSheetCustomization = otpSheetCustomization,
+            cancelDialogCustomization = cancelDialogCustomization,
+            loaderCustomization = loaderCustomization
+        )
     }
 
-    fun createPayment(): String? {
-        return runBlocking { // Blocks execution until complete
-            val baseUrl = "http://10.0.2.2:5252/create-payment-intent"
-            withContext(Dispatchers.IO) {
-                try {
-                    val request = Request.Builder()
-                        .url(baseUrl)
-                        .get()
-                        .build()
-
-                    val client = OkHttpClient()
-                    val response: Response = client.newCall(request).execute()
-
-                    if (response.isSuccessful) {
-                        response.body?.string()?.let { responseData ->
-                            val jsonResponse = JSONObject(responseData)
-                            val publishableKey = jsonResponse.getString("publishableKey")
-                            clientSecret = jsonResponse.getString("clientSecret")
-
-                            println("Publishable Key: $publishableKey")
-                            println("Client Secret: $clientSecret")
-
-                            return@withContext clientSecret // Return clientSecret after request
-                        }
-                    } else {
-                        println("Error: ${response.code}")
-                    }
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
-                null
-            }
-        }
-
-
+    private fun getFont(context: Context, fontPath: String): IFont.TypefaceFont {
+        return IFont.TypefaceFont(Typeface.createFromAsset(context.assets, fontPath))
     }
 
 
@@ -157,85 +143,105 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         val btn = findViewById<Button>(R.id.myBtn)
 
-        createPayment()
-        authenticate()
-        val challengeStatusReceiver = object : ChallengeStatusReceiver {
-            override fun completed(completionEvent: CompletionEvent) {
-                println("Completion Event: $completionEvent")
-            }
 
-            override fun cancelled() {
-                println("Cancelled")
+//        val challengeStatusReceiver = object : ChallengeStatusReceiver {
+//            override fun completed(completionEvent: CompletionEvent) {
+//                println("Completion Event: $completionEvent")
+//            }
+//
+//            override fun cancelled() {
+//                println("Cancelled")
+//
+//            }
+//
+//            override fun timedout() {
+//                println("Timedout")
+//
+//            }
+//
+//            override fun protocolError(protocolErrorEvent: ProtocolErrorEvent) {
+//                println("Completion Event: $protocolErrorEvent")
+//
+//            }
+//
+//            override fun runtimeError(runtimeErrorEvent: RuntimeErrorEvent) {
+//                println("Completion Event: $runtimeErrorEvent")
+//
+//            }
+//
+//        }
 
-            }
-
-            override fun timedout() {
-                println("Timedout")
-
-            }
-
-            override fun protocolError(protocolErrorEvent: ProtocolErrorEvent) {
-                println("Completion Event: $protocolErrorEvent")
-
-            }
-
-            override fun runtimeError(runtimeErrorEvent: RuntimeErrorEvent) {
-                println("Completion Event: $runtimeErrorEvent")
-
-            }
-
-        }
-
-
+        val activity = this
         btn.setOnClickListener {
-            authenticate()
-//            createPayment()
-            try {
+            lifecycleScope.launch {
+
+                val authenticateResponseJson = Utils.authenticate()!!
+                try {
 //                ThreeDSFactory.initialize<TridentSDK>(
 //                    ThreeDSSDKType.TRIDENT,
 //                    clientSecret,
 //                    "pk_snd_23ff7c6d50e5424ba2e88415772380cd"
 //                )
-                ThreeDSFactory.initializeWithAuthResponse<TridentSDK>(
-                    type = ThreeDSSDKType.TRIDENT,
-                    authenticateResponseJson = authenticateResponseJson,
-                    publishableKey = "pk_snd_eccadfa3a89d4fa0a7a331f20b1dea23"
-                )
-                val trident = ThreeDSFactory.getService<TridentSDK>()
-                trident.setClientSecret(clientSecret)
-                trident.initialise(
-                    applicationContext, ConfigParameters(), "en-US",
-                    null
-                )
+                    ThreeDSFactory.initializeWithAuthResponse<TridentSDK>(
+                        type = ThreeDSSDKType.TRIDENT,
+                        authenticateResponseJson = authenticateResponseJson,
+                        publishableKey = "pk_snd_eccadfa3a89d4fa0a7a331f20b1dea23"
+                    )
+                    val trident = ThreeDSFactory.getService<TridentSDK>()
+                    trident.setAuthenticationResponse(authenticateResponseJson)
+                    trident.initialise(
+                        applicationContext, "en-US", getUiCustomization()
+                    ) { initializationResult ->
+                        when (initializationResult) {
+                            is Result.Success -> {
+                                runOnUiThread {
+                                    trident.startAuthentication(
+                                        application,
+                                        activity
+                                    ) { authResult ->
+                                        when (authResult) {
+                                            is Result.Success -> {
+                                                println("Success: ${authResult.message}")
+                                            }
 
-                trident.startAuthentication(application, this) { authResult ->
-                    when (authResult) {
-                        is AuthResult.Success -> {
-                            println("Success: ${authResult.message}")
+                                            is Result.Failure -> {
+                                                println("Failure: ${authResult.errorMessage}")
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            is Result.Failure -> {
+
+                            }
                         }
 
-                        is AuthResult.Failure -> {
-                            println("Failure: ${authResult.errorMessage}")
-                        }
+
+                        /* FOR A GRANULAR CONTROL individual function can be called
+                        val dsId = trident.getMessageVersion()
+                        val messageVersion = trident.getDirectoryServerID()
+                        val transaction = trident.createTransaction(dsId, messageVersion)
+                        val aReq = transaction.getAuthenticationRequestParameters()
+                        val activity = this
+                        val challengeParameters = trident.getChallengeParameters(aReq)
+                        trident.doChallenge(
+                            activity,
+                            challengeParameters,
+                            challengeStatusReceiver,
+                            0,
+                            ""
+                        )
+                        */
                     }
+
+
+                } catch (exception: Exception) {
+                    println("my error" + exception.message)
                 }
 
-            } catch (exception: Exception) {
-                println("my error"+exception.message)
             }
-            /* FOR A GRANULAR CONTROL individual function can be called
-            val dsId = trident.getMessageVersion()
-            val messageVersion = trident.getDirectoryServerID()
-            val transaction = trident.createTransaction(dsId, messageVersion)
-            val aReq = transaction.getAuthenticationRequestParameters()
-            val activity = this
-            val challengeParameters = trident.getChallengeParameters(aReq)
-            trident.doChallenge(activity, challengeParameters, challengeStatusReceiver, 0, "")
-             */
-
-
         }
-
-
     }
 }
+
