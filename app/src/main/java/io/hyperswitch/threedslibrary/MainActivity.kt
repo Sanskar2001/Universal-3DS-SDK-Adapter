@@ -31,11 +31,11 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
 
     private fun getUiCustomization(): UiCustomization {
-        val fontCustomization = FontCustomization(
-            regular = getFont(applicationContext, "fonts/BasisGrotesquePro-Regular.ttf"),
-            bold = getFont(applicationContext, "fonts/BasisGrotesquePro-Bold.ttf"),
-            semiBold = getFont(applicationContext, "fonts/BasisGrotesquePro-SemiBold.ttf")
-        )
+//        val fontCustomization = FontCustomization(
+//            regular = getFont(applicationContext, "fonts/BasisGrotesquePro-Regular.ttf"),
+//            bold = getFont(applicationContext, "fonts/BasisGrotesquePro-Bold.ttf"),
+//            semiBold = getFont(applicationContext, "fonts/BasisGrotesquePro-SemiBold.ttf")
+//        )
 
         val toolbarCustomization = ToolbarCustomization(
             backgroundColor = "#FFEEE5",
@@ -121,7 +121,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         return UiCustomization(
-            fontCustomization = fontCustomization,
+
             toolbarCustomization = toolbarCustomization,
             submitButtonCustomization = submitButtonCustomization,
             resendButtonCustomization = resendButtonCustomization,
