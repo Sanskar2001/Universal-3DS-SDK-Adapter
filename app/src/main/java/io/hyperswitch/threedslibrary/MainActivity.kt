@@ -143,33 +143,28 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         val btn = findViewById<Button>(R.id.myBtn)
 
+        val challengeStatusReceiver = object : ChallengeStatusReceiver {
+            override fun cancelled() {
+                println("")
+            }
 
-//        val challengeStatusReceiver = object : ChallengeStatusReceiver {
-//            override fun completed(completionEvent: CompletionEvent) {
-//                println("Completion Event: $completionEvent")
-//            }
-//
-//            override fun cancelled() {
-//                println("Cancelled")
-//
-//            }
-//
-//            override fun timedout() {
-//                println("Timedout")
-//
-//            }
-//
-//            override fun protocolError(protocolErrorEvent: ProtocolErrorEvent) {
-//                println("Completion Event: $protocolErrorEvent")
-//
-//            }
-//
-//            override fun runtimeError(runtimeErrorEvent: RuntimeErrorEvent) {
-//                println("Completion Event: $runtimeErrorEvent")
-//
-//            }
-//
-//        }
+            override fun completed(completionEvent: CompletionEvent) {
+                println("")
+            }
+
+            override fun protocolError(protocolErrorEvent: ProtocolErrorEvent) {
+                println("")
+            }
+
+            override fun runtimeError(runtimeErrorEvent: RuntimeErrorEvent) {
+                println("")
+            }
+
+            override fun timedout() {
+                println("")
+            }
+
+        }
 
         val activity = this
         btn.setOnClickListener {
@@ -195,20 +190,28 @@ class MainActivity : AppCompatActivity() {
                         when (initializationResult) {
                             is Result.Success -> {
                                 runOnUiThread {
-                                    trident.startAuthentication(
-                                        application,
-                                        activity
-                                    ) { authResult ->
-                                        when (authResult) {
-                                            is Result.Success -> {
-                                                println("Success: ${authResult.message}")
-                                            }
 
-                                            is Result.Failure -> {
-                                                println("Failure: ${authResult.errorMessage}")
-                                            }
-                                        }
+                                    trident.startAuthentication(application,activity){result: Result -> println(
+                                        result
+                                    )
                                     }
+//                                    val dsId = trident.getMessageVersion()
+//                                    val messageVersion = trident.getDirectoryServerID()
+//                                    val transaction =
+//                                        trident.createTransaction(dsId, messageVersion)
+//                                    val aReq = transaction.getAuthenticationRequestParameters()
+//                                    val challengeParameters = trident.getChallengeParameters(aReq)
+//
+//
+//                                    if (challengeParameters.transStatus == "C") {
+//                                        transaction.doChallenge(
+//                                            activity,
+//                                            challengeParameters,
+//                                            challengeStatusReceiver,
+//                                            0,
+//                                            ""
+//                                        )
+//                                    }
                                 }
                             }
 

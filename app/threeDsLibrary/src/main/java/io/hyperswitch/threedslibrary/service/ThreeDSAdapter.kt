@@ -82,31 +82,8 @@ interface ThreeDSAdapter<
      *
      * @return `AuthenticationRequestParameters` containing all necessary authentication details.
      */
-    fun getAuthenticationRequestParameters(): AuthenticationRequestParameters
+   
 
-    /**
-     * Initiates a 3D Secure challenge process for authentication.
-     *
-     * @param activity The activity context where the challenge UI will be displayed.
-     * @param challengeParameters The challenge parameters required for the authentication flow.
-     * @param challengeStatusReceiver The callback interface to handle challenge results.
-     * @param timeOutInMinutes The maximum time allowed for completing the challenge.
-     * @param bankDetails Additional information related to the bank (optional).
-     *
-     * @throws InvalidInputException If the provided challenge parameters are invalid.
-     * @throws SDKRuntimeException If an error occurs during the challenge execution.
-     */
-    @Throws(
-        InvalidInputException::class,
-        SDKRuntimeException::class
-    )
-    fun doChallenge(
-        activity: Activity,
-        challengeParameters: ChallengeParameters,
-        challengeStatusReceiver: io.hyperswitch.threedslibrary.data.ChallengeStatusReceiver,
-        timeOutInMinutes: Int,
-        bankDetails: String?
-    )
 
     /**
      * Extracts challenge parameters from an authentication request.

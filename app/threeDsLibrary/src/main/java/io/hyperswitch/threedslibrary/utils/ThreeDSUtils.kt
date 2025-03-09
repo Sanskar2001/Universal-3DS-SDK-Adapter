@@ -21,7 +21,7 @@ object ThreeDSUtils {
     var authenticationData: AuthenticationData? = null
     fun createAuthCallBody(
         clientSecret: String,
-        aReq: AuthenticationRequestParameters
+        aReq: io.hyperswitch.threedslibrary.data.AuthenticationRequestParameters
     ): String {
         val body = JSONObject().apply {
             put("client_secret", clientSecret)
@@ -47,8 +47,8 @@ object ThreeDSUtils {
 
     suspend fun hsAReq(
         publishableKey: String?,
-        aReq: AuthenticationRequestParameters
-    ): ChallengeParameters? = withContext(Dispatchers.IO) {
+        aReq: io.hyperswitch.threedslibrary.data.AuthenticationRequestParameters
+    ): io.hyperswitch.threedslibrary.data.ChallengeParameters? = withContext(Dispatchers.IO) {
 
 
         val paymentId = authenticationData!!.paymentId
@@ -88,11 +88,12 @@ object ThreeDSUtils {
                     authenticationData!!.transStatus = transStatus
 
 
-                    return@withContext ChallengeParameters(
+                    return@withContext io.hyperswitch.threedslibrary.data.ChallengeParameters(
                         threeDSServerTransactionID = threeDSServerTransId,
                         acsTransactionID = acsTransactionId,
                         acsRefNumber = acsRefNumber,
-                        acsSignedContent = acsSignedContent
+                        acsSignedContent = acsSignedContent,
+                        transStatus = transStatus
                     )
                 }
             } else {
@@ -107,11 +108,12 @@ object ThreeDSUtils {
                 authenticationData!!.transStatus = transStatus
 
 
-                return@withContext ChallengeParameters(
+                return@withContext io.hyperswitch.threedslibrary.data.ChallengeParameters(
                     threeDSServerTransactionID = threeDSServerTransId,
                     acsTransactionID = acsTransactionId,
                     acsRefNumber = acsRefNumber,
-                    acsSignedContent = acsSignedContent
+                    acsSignedContent = acsSignedContent,
+                    transStatus = transStatus
                 )
 
 
